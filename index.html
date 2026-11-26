@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Galerie, plánování a historie jídelních lístků Peters Canteen.">
+  <title>Pomocník pro kuchaře · Peters Canteen</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="history.js" defer></script>
+  <script src="photos.js" defer></script>
+  <script src="planner.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="#galerie"><strong>Peters Canteen</strong><span>Pomocník pro kuchaře</span></a>
+    <nav aria-label="Hlavní nabídka">
+      <a href="#galerie">Galerie</a>
+      <a href="#generator">Generátor jídelního lístku</a>
+      <a href="#historie">Historie jídelních lístků</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <section id="galerie" class="view" aria-labelledby="gallery-title">
+    <div class="heading"><h1 id="gallery-title">Galerie jídel</h1><span class="count" id="gallery-count"></span></div>
+    <form id="filters" class="panel filters">
+      <label>Hledat jídlo<input type="search" id="dish-query" placeholder="Např. řízek, svíčková nebo tofu"></label>
+      <label>Hlavní surovina<select id="protein"></select></label>
+      <label>Typ jídla<select id="style"></select></label>
+      <label>Příloha<select id="side"></select></label>
+      <label class="inline"><input type="checkbox" id="with-photo"> Jen s fotkou</label>
+      <button id="reset" type="reset" class="secondary">Vymazat filtry</button>
+    </form>
+    <div id="dish-grid" class="dish-grid"></div>
+    <button id="more" class="secondary more" type="button">Zobrazit další jídla</button>
+  </section>
+  <section id="generator" class="view" hidden aria-labelledby="planner-title">
+    <div class="heading"><h1 id="planner-title">Generátor jídelního lístku</h1></div>
+    <p class="lead">Vyber dny a suroviny. Z historie dostaneš několik návrhů na každý vybraný den a můžeš si je připnout do rozpracovaného týdne.</p>
+    <form id="plan-form" class="panel plan-form">
+      <div class="plan-inputs">
+        <label>Začátek týdne<input id="week-start" type="date" required></label>
+        <label>Orientační strop prodejní ceny (Kč)<input id="price-limit" type="number" min="0" step="1" placeholder="Bez stropu"></label>
+      </div>
+      <fieldset><legend>Dny</legend><div id="plan-days" class="choices"></div></fieldset>
+      <fieldset><legend>Hlavní suroviny</legend><div id="plan-proteins" class="choices"></div><small>Prázdný výběr zahrne všechny suroviny.</small></fieldset>
+      <fieldset><legend>Upřednostnit zeleninu</legend><div id="plan-vegetables" class="choices"></div></fieldset>
+      <div class="submit"><button type="submit">Najít návrhy</button><span id="plan-evidence"></span></div>
+    </form>
+    <div class="plan-layout">
+      <div id="ideas" aria-live="polite"></div>
+      <aside class="panel draft"><h2>Rozpracovaný týden</h2><div id="draft"></div><button id="copy-draft" class="secondary" type="button">Zkopírovat rozpracovaný týden</button><p id="draft-status" role="status"></p></aside>
+    </div>
+  </section>
+  <section id="historie" class="view" hidden aria-labelledby="history-title">
+    <div class="heading"><h1 id="history-title">Historie jídelních lístků</h1><button id="add-menu" type="button" class="secondary">Doplnit jídelní lístek</button></div>
+    <div class="panel history-tools">
+      <div id="history-week-picker" class="week-picker">
+        <span id="history-week-label">Týden</span>
+        <button id="history-week-toggle" type="button" class="week-toggle" aria-labelledby="history-week-label history-week-value" aria-expanded="false" aria-controls="history-week-options">
+          <span id="history-week-value"></span>
+        </button>
+        <div id="history-week-options" class="week-options" role="group" aria-labelledby="history-week-label" hidden></div>
+      </div>
+      <div class="week-buttons"><button id="previous-week" class="secondary" type="button">Starší týden</button><button id="next-week" class="secondary" type="button">Novější týden</button></div>
+      <label>Hledat v celé historii<input type="search" id="history-query" placeholder="Např. hovězí na houbách"></label>
+    </div>
+    <div id="menus" aria-live="polite"></div>
+  </section>
+</main>
+<dialog id="detail" aria-labelledby="dish-detail-title">
+  <div class="dialog-top"><button class="secondary" data-close type="button">Zavřít</button></div>
+  <div id="dish-detail"></div>
+  <div class="detail-quick-actions"><button id="detail-top" type="button" aria-label="Zpět na začátek detailu" title="Zpět na začátek detailu" hidden></button></div>
+</dialog>
+<dialog id="edit-menu">
+  <div class="dialog-top"><button class="secondary" data-close type="button">Zavřít</button></div>
+  <form id="menu-form">
+    <h2 id="edit-title">Doplnit jídelní lístek</h2>
+    <label>Datum<input id="edit-date" type="date" required></label>
+    <label>Jídla, každé na vlastním řádku<textarea id="edit-lines" rows="6" required placeholder="Kuřecí řízek s bramborovou kaší | 165 | Kuřecí | Brambory | Řízky"></textarea></label>
+    <small>Stačí název. Volitelně za něj odděl svislou čarou cenu, hlavní surovinu, přílohu, typ a zeleninu. Pro polévky vyber dole „Polévky“.</small>
+    <label>Chod<select id="edit-kind"><option value="Jídlo">Hlavní chody</option><option value="Polévka">Polévky</option></select></label>
+    <div class="submit"><button type="submit">Uložit záznamy</button><button type="button" id="export-menu" class="secondary">Stáhnout místní doplnění</button><label class="file secondary">Načíst doplnění<input id="import-menu" type="file" accept=".json,application/json"></label><button type="button" id="export-shared" class="secondary">Stáhnout celý archiv pro GitHub</button></div>
+    <p id="edit-status" role="status"></p>
+  </form>
+</dialog>
+</body>
+</html>
