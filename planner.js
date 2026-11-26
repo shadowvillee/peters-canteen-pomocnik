@@ -4,7 +4,18 @@
   const key = title => norm(title).replace(/[^a-z0-9]+/g, " ").trim();
   // Ignore interchangeable connectors before named sides. The side itself stays in the identity.
   const sideConnector = /\b(?:a|s|se) (?=(?:houskov\w* knedl\w*|bramborov\w* (?:knedl\w*|kas\w*|salat\w*|kroket\w*)|(?:karlovarsk|spekov|varsavsk)\w* knedl\w*|(?:dus|jasminov)\w* ryz\w*|(?:pecen|varen|stouchan|op[ea]kan|baby)\w* brambor\w*|(?:farmarsk\w* )?hranol\w*|testovin\w*|kysel\w* okurk\w*)\b)/g;
-  const dishKey = title => key(title).replace(sideConnector, "");
+  const haluskyTitle = "Bramborové halušky s uzeným masem, kysaným zelím a smaženou cibulkou";
+  const haluskyAliases = new Set([
+    haluskyTitle,
+    "Bramborové halušky s uzeným masem, kysaným zelím a cibulkou",
+    "Bramborové halušky s uzeným masem a kysaným zelím, smaž.cibulkou",
+    "Bramborové halušky s kysaným zelím a uzeným masem se smaženou cibulkou"
+  ].map(key));
+  const haluskyKey = key(haluskyTitle);
+  const dishKey = title => {
+    const normalized = key(title);
+    return haluskyAliases.has(normalized) ? haluskyKey : normalized.replace(sideConnector, "");
+  };
   const date = value => new Date(value + "T12:00:00Z");
   const iso = value => value.toISOString().slice(0, 10);
   const add = (value, days) => iso(new Date(date(value).getTime() + days * 86400000));
@@ -64,7 +75,9 @@
     return [...map.values()].map(entry => {
       entry.occurrences.sort((a, b) => b.date.localeCompare(a.date));
       entry.dates = [...new Set(entry.occurrences.map(row => row.date))];
-      return {...entry, ...entry.occurrences[0]};
+      const latest = entry.occurrences[0];
+      const title = entry.id === haluskyKey ? haluskyTitle : latest.title;
+      return {...entry, ...latest, title};
     });
   }
 
