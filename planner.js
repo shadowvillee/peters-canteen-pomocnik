@@ -4,17 +4,29 @@
   const key = title => norm(title).replace(/[^a-z0-9]+/g, " ").trim();
   // Ignore interchangeable connectors before named sides. The side itself stays in the identity.
   const sideConnector = /\b(?:a|s|se) (?=(?:houskov\w* knedl\w*|bramborov\w* (?:knedl\w*|kas\w*|salat\w*|kroket\w*)|(?:karlovarsk|spekov|varsavsk)\w* knedl\w*|(?:dus|jasminov)\w* ryz\w*|(?:pecen|varen|stouchan|op[ea]kan|baby)\w* brambor\w*|(?:farmarsk\w* )?hranol\w*|testovin\w*|kysel\w* okurk\w*)\b)/g;
-  const haluskyTitle = "Bramborové halušky s uzeným masem, kysaným zelím a smaženou cibulkou";
-  const haluskyAliases = new Set([
-    haluskyTitle,
-    "Bramborové halušky s uzeným masem, kysaným zelím a cibulkou",
-    "Bramborové halušky s uzeným masem a kysaným zelím, smaž.cibulkou",
-    "Bramborové halušky s kysaným zelím a uzeným masem se smaženou cibulkou"
-  ].map(key));
-  const haluskyKey = key(haluskyTitle);
+  const dishAliases = new Map();
+  const canonicalTitles = new Map();
+  for (const [title, ...variants] of [
+    ["Bramborové halušky s uzeným masem, kysaným zelím a smaženou cibulkou",
+      "Bramborové halušky s uzeným masem, kysaným zelím a cibulkou",
+      "Bramborové halušky s uzeným masem a kysaným zelím, smaž.cibulkou",
+      "Bramborové halušky s kysaným zelím a uzeným masem se smaženou cibulkou"],
+    ["Smažený kuřecí řízek s citronem, bramborovou kaší a kyselou okurkou",
+      "Smažený kuřecí řízek s bramborovou kaší, citronem a kyselou okurkou",
+      "Smažený kuřecí řízek s citronem a bramborovou kaší a kyselou okurkou",
+      "Smažený kuřecí řízek s citronem a bramborovou kaší s kyselou okurkou",
+      "Smažený kuřecí řízek s citronem a bramborovou kaší, kyselá okurka"],
+    ["Smažený vepřový řízek s citronem, bramborovou kaší a kyselou okurkou",
+      "Smažený vepřový řízek s bramborovou kaší, citronem a kyselou okurkou",
+      "Smažený vepřový řízek s citronem a bramborovou kaší a kyselou okurkou"]
+  ]) {
+    const id = key(title).replace(sideConnector, "");
+    canonicalTitles.set(id, title);
+    for (const variant of variants) dishAliases.set(key(variant).replace(sideConnector, ""), id);
+  }
   const dishKey = title => {
-    const normalized = key(title);
-    return haluskyAliases.has(normalized) ? haluskyKey : normalized.replace(sideConnector, "");
+    const normalized = key(title).replace(sideConnector, "");
+    return dishAliases.get(normalized) ?? normalized;
   };
   const date = value => new Date(value + "T12:00:00Z");
   const iso = value => value.toISOString().slice(0, 10);
@@ -76,7 +88,7 @@
       entry.occurrences.sort((a, b) => b.date.localeCompare(a.date));
       entry.dates = [...new Set(entry.occurrences.map(row => row.date))];
       const latest = entry.occurrences[0];
-      const title = entry.id === haluskyKey ? haluskyTitle : latest.title;
+      const title = canonicalTitles.get(entry.id) ?? latest.title;
       return {...entry, ...latest, title};
     });
   }
