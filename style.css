@@ -116,4 +116,12 @@ dialog::backdrop{background:#14141488}
 .file input{position:absolute;width:1px;height:1px;opacity:0}
 @media(max-width:850px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.filters #reset{grid-column:2}.plan-layout{grid-template-columns:1fr}}
 @media(max-width:540px){.bar{padding-block:12px;gap:9px}nav{gap:0}nav a{padding:6px;font-size:.95rem}.filters label:first-child{grid-column:1/-1}.view{padding-top:24px}}
+@media(max-width:420px){
+  .filters{grid-template-columns:minmax(0,1fr)}
+  .filters #reset{grid-column:1;justify-self:stretch}
+  .detail-quick-actions:has(#detail-top:not([hidden])){
+    height:52px;
+    background:var(--bg);
+  }
+}
 
