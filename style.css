@@ -94,7 +94,13 @@ dialog{background:var(--bg);color:var(--ink);width:min(680px,calc(100% - 24px));
 dialog::backdrop{background:#14141488}
 .dialog-top{justify-content:flex-end;margin-bottom:10px}
 .detail-photos{width:min(100%,380px);margin:14px auto 22px}
+.detail-photo{position:relative}
 .detail-photo img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:var(--surface);border-radius:10px}
+.photo-expand{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:44px;height:44px;padding:0;font:1.5rem/1 system-ui;box-shadow:0 2px 8px #14141433}
+#photo-viewer{position:fixed;inset:0;margin:0;width:100%;height:100vh;height:100dvh;max-width:none;max-height:none;border:0;border-radius:0;overflow:hidden;background:#141414;padding:12px;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+#photo-viewer[open]{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}
+#photo-viewer [data-close]{justify-self:end;min-height:44px}
+#photo-viewer-image img{display:block;width:100%;height:100%;object-fit:contain}
 .photo-caption{margin:8px 0 5px;color:var(--muted);font-size:.9rem;text-align:center}
 .photo-thumbnails{display:flex;justify-content:safe center;gap:8px;padding:5px;overflow-x:auto;overscroll-behavior-inline:contain}
 .photo-thumb{flex:0 0 58px;width:58px;height:58px;padding:2px;background:var(--white);border:1px solid var(--line)}

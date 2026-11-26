@@ -199,8 +199,24 @@ function detailPhotos(dish, preferredDate) {
   const figure = el("figure", "", "detail-photos");
   const main = el("div", "", "detail-photo");
   figure.append(main);
+
+  function showPhoto(view) {
+    const image = dishImage(dish, {view});
+    main.replaceChildren(image);
+    if (view) {
+      const expand = trigger("⛶", () => {
+        $("photo-viewer-image").replaceChildren(dishImage(dish, {view}));
+        $("photo-viewer").showModal();
+      }, "secondary photo-expand");
+      expand.setAttribute("aria-label", "Zvětšit fotku na celou obrazovku");
+      expand.title = "Zvětšit fotku";
+      image.addEventListener("error", () => { expand.hidden = true; }, {once:true});
+      main.append(expand);
+    }
+  }
+
   if (views.length < 2) {
-    main.append(dishImage(dish));
+    showPhoto(views[0]);
     return figure;
   }
 
@@ -220,7 +236,7 @@ function detailPhotos(dish, preferredDate) {
   });
   function selectPhoto(index) {
     const view = views[index];
-    main.replaceChildren(dishImage(dish, {view}));
+    showPhoto(view);
     caption.textContent = "Záběr " + (index + 1) + " z " + views.length + (view.date ? " · " + labelDate(view.date) : "");
     choices.forEach((choice, i) => choice.setAttribute("aria-pressed", String(i === index)));
   }

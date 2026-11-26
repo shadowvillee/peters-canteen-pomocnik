@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Galerie, plánování a historie jídelních lístků Peters Canteen.">
   <title>Pomocník pro kuchaře · Peters Canteen</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <script src="history.js" defer></script>
   <script src="photos.js" defer></script>
   <script src="planner.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=3" defer></script>
 </head>
 <body>
 <header class="top">
@@ -74,6 +74,10 @@
   <div class="dialog-top"><button class="secondary" data-close type="button">Zavřít</button></div>
   <div id="dish-detail"></div>
   <div class="detail-quick-actions"><button id="detail-top" type="button" aria-label="Zpět na začátek detailu" title="Zpět na začátek detailu" hidden></button></div>
+</dialog>
+<dialog id="photo-viewer" aria-label="Zvětšená fotka jídla">
+  <button class="secondary" data-close type="button" autofocus>Zavřít fotku</button>
+  <div id="photo-viewer-image"></div>
 </dialog>
 <dialog id="edit-menu">
   <div class="dialog-top"><button class="secondary" data-close type="button">Zavřít</button></div>
