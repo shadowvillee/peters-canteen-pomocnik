@@ -299,7 +299,7 @@ function renderWeekOptions() {
     if (!monthly && month !== previousMonth) {
       const group = el("section");
       options = el("div", "", "week-choices");
-      group.append(el("h3", capitalize(formats.month.format(C.date(week))), "week-month"), options);
+      group.append(el("h3", monthTitle(month), "week-month"), options);
       panel.append(group);
       previousMonth = month;
     }
