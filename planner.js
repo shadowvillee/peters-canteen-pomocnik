@@ -16,6 +16,9 @@
       "Smažený kuřecí řízek s citronem a bramborovou kaší a kyselou okurkou",
       "Smažený kuřecí řízek s citronem a bramborovou kaší s kyselou okurkou",
       "Smažený kuřecí řízek s citronem a bramborovou kaší, kyselá okurka"],
+    ["Hovězí svíčková s citronem a brusinkami s houskovým knedlíkem",
+      "Svíčková hovězí pečeně s citronem a brusinkami s houskovým knedlíkem",
+      "Hovězí svíčková hovězí pečeně s houskovým knedlíkem, citronem a brusinkami"],
     ["Smažený vepřový řízek s citronem, bramborovou kaší a kyselou okurkou",
       "Smažený vepřový řízek s bramborovou kaší, citronem a kyselou okurkou",
       "Smažený vepřový řízek s citronem a bramborovou kaší a kyselou okurkou"]
