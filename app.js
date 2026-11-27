@@ -52,6 +52,8 @@ let history, dishes, weeks;
 let shown = 24;
 let selectedHistoryDate = null;
 let selectedWeek = "";
+let selectedMonth = "";
+let historyMode = "list";
 let currentIdeas = [];
 let weekForDraft = "";
 let menuRowBeingEdited = null;
@@ -149,6 +151,7 @@ function reloadData() {
   dishes = served.sort((a,b) => Number(photos.has(b.id))-Number(photos.has(a.id)) || b.date.localeCompare(a.date));
   weeks = [...new Set(history.map(row => C.monday(row.date)))].sort().reverse();
   if (!weeks.includes(selectedWeek)) selectedWeek = weeks[0] || "";
+  if (!historyMonths().includes(selectedMonth)) selectedMonth = historyMonths()[0] || "";
   renderWeekOptions();
   fill($("protein"), "Všechny suroviny", C.meat);
   fill($("side"), "Všechny přílohy", [...new Set(dishes.flatMap(d => d.sides))].sort((a,b)=>a.localeCompare(b,"cs")));
@@ -282,25 +285,29 @@ function detail(dish, preferredDate) {
   $("detail-top").hidden = true;
 }
 
+const historyMonths = () => [...new Set(history.map(row => row.date.slice(0,7)))].reverse();
+const monthTitle = month => capitalize(formats.month.format(C.date(month + "-01")));
+
 function renderWeekOptions() {
+  const monthly = historyMode === "month";
   const panel = $("history-week-options");
   panel.replaceChildren();
   let previousMonth = "";
-  let options;
-  for (const week of weeks) {
-    const month = week.slice(0,7);
-    if (month !== previousMonth) {
+  let options = panel;
+  for (const period of monthly ? historyMonths() : weeks) {
+    const month = monthly ? period : period.slice(0,7);
+    if (!monthly && month !== previousMonth) {
       const group = el("section");
       options = el("div", "", "week-choices");
       group.append(el("h3", capitalize(formats.month.format(C.date(week))), "week-month"), options);
       panel.append(group);
       previousMonth = month;
     }
-    const option = trigger(labelWeek(week), () => {
-      chooseWeek(week);
+    const option = trigger(monthly ? monthTitle(period) : labelWeek(period), () => {
+      chooseHistoryPeriod(period);
       setWeekOptionsOpen(false, true);
     }, "week-option");
-    option.dataset.week = week;
+    option.dataset.period = period;
     options.append(option);
   }
 }
@@ -319,11 +326,30 @@ function setWeekOptionsOpen(open, focus = false) {
   } else if (focus) toggle.focus({preventScroll:true});
 }
 
-function chooseWeek(week) {
-  selectedWeek = week;
+function chooseHistoryPeriod(period) {
+  if (!period) return;
+  if (historyMode === "month") {
+    selectedMonth = period;
+    const firstDay = history.find(row => row.date.startsWith(period)).date;
+    selectedWeek = C.monday(firstDay);
+  } else {
+    selectedWeek = period;
+    const firstDay = history.find(row => C.monday(row.date) === period).date;
+    selectedMonth = firstDay.slice(0,7);
+  }
   selectedHistoryDate = null;
   $("history-query").value = "";
   renderHistory();
+}
+
+function setHistoryMode(mode) {
+  if (mode === historyMode) return;
+  historyMode = mode;
+  setWeekOptionsOpen(false);
+  $("history-modes").querySelectorAll("button").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+  });
+  renderWeekOptions();
 }
 
 function openHistory(day) {
@@ -331,6 +357,7 @@ function openHistory(day) {
   $("detail").close();
   $("history-query").value = "";
   selectedWeek = C.monday(day);
+  selectedMonth = day.slice(0,7);
   location.hash = "historie";
   updateRoute();
   renderHistory();
@@ -338,25 +365,35 @@ function openHistory(day) {
 }
 
 function renderHistory() {
-  const index = weeks.indexOf(selectedWeek);
-  $("history-week-value").textContent = index < 0 ? "Žádné týdny" : labelWeek(selectedWeek, true);
+  const monthly = historyMode === "month";
+  const periods = monthly ? historyMonths() : weeks;
+  const selected = monthly ? selectedMonth : selectedWeek;
+  const index = periods.indexOf(selected);
+  $("history-week-label").textContent = monthly ? "Měsíc" : "Týden";
+  $("history-week-value").textContent = index < 0 ? "Žádné záznamy" : monthly ? monthTitle(selected) : labelWeek(selected, true);
   $("history-week-toggle").disabled = index < 0;
   $("history-week-options").querySelectorAll(".week-option").forEach(option => {
-    if (option.dataset.week === selectedWeek) option.setAttribute("aria-current","true");
+    if (option.dataset.period === selected) option.setAttribute("aria-current","true");
     else option.removeAttribute("aria-current");
   });
-  $("previous-week").disabled = index < 0 || index >= weeks.length - 1;
+  $("previous-week").textContent = monthly ? "Starší měsíc" : "Starší týden";
+  $("next-week").textContent = monthly ? "Novější měsíc" : "Novější týden";
+  $("previous-week").disabled = index < 0 || index >= periods.length - 1;
   $("next-week").disabled = index <= 0;
   const filter = $("history-query").value.trim();
   const table = new Map();
   const result = filter ? history.filter(row => words(row.title, filter)).slice().reverse() :
-    history.filter(row => C.monday(row.date) === weeks[index]);
+    history.filter(row => monthly ? row.date.slice(0,7) === selected : C.monday(row.date) === selected);
   for (const row of result) {
     if (!table.has(row.date)) table.set(row.date, []);
     table.get(row.date).push(row);
   }
   const container = $("menus");
   container.replaceChildren();
+  if (historyMode !== "list" && selected) {
+    container.append(historyCalendar(table, monthly));
+    return;
+  }
   for (const [day, rows] of table) {
     const section = el("article", "", "panel history-day");
     section.id = "day-" + day;
@@ -381,6 +418,60 @@ function renderHistory() {
     container.append(section);
   }
   if (!table.size) container.append(el("p","Pro tento výběr nejsou žádné záznamy.","empty"));
+}
+
+function shortCalendarTitle(title) {
+  const tokens = title.trim().split(/\s+/);
+  const side = tokens.findIndex((token, i) => i >= 2 && /^(s|se)$/.test(C.key(token)) &&
+    /^(?:(?:houskov|bramborov|karlovarsk|dus|jasminov|varen|pecen|stouchan|farmarsk)\w* )*(?:brambor|knedl|ryz|hranol|kroket|testovin)/.test(C.key(tokens.slice(i+1).join(" "))));
+  const label = tokens.slice(0, Math.min(5, side < 0 ? tokens.length : side)).join(" ");
+  return label.replace(/\s+(?:s|se|z|a|na|v|ve|po|podle)$/i, "").replace(/[,;:/–-]+$/, "");
+}
+
+function historyCalendar(table, monthly) {
+  const first = monthly ? selectedMonth + "-01" : selectedWeek;
+  const offset = monthly ? C.weekday(first) : 0;
+  const count = monthly ? new Date(Date.UTC(Number(first.slice(0,4)), Number(first.slice(5,7)), 0)).getUTCDate() : 7;
+  const calendar = el("div", "", "menu-calendar " + (monthly ? "calendar-month" : "calendar-week"));
+  const byId = new Map(dishes.map(dish => [dish.id,dish]));
+  if (monthly) {
+    for (const name of [...dayNames,"Sobota","Neděle"]) calendar.append(el("div", name, "calendar-weekday"));
+    for (let i = 0; i < offset; i++) calendar.append(el("div", "", "calendar-spacer"));
+  }
+  for (let i = 0; i < count; i++) {
+    const date = C.add(first, i);
+    const rows = table.get(date) || [];
+    const day = el("article", "", "calendar-day" + (rows.length ? "" : " calendar-empty"));
+    day.id = "day-" + date;
+    if (date === selectedHistoryDate) day.classList.add("calendar-selected");
+    const heading = el("h2");
+    heading.append(el("span",labelDay(date),"calendar-full-date"));
+    if (monthly) {
+      const number = el("span", String(Number(date.slice(-2))), "calendar-date-number");
+      number.setAttribute("aria-hidden","true");
+      heading.setAttribute("aria-label",labelDay(date));
+      heading.append(number);
+    }
+    day.append(heading);
+    if (!rows.length) {
+      if (!monthly) day.append(el("p","Bez záznamu","meta"));
+    } else {
+      const items = el("ul", "", "calendar-meals");
+      for (const row of rows) {
+        const dish = byId.get(C.dishKey(row.title));
+        const button = trigger(shortCalendarTitle(row.title), () => detail(dish,date), "calendar-meal");
+        button.title = row.title;
+        button.setAttribute("aria-label",row.title);
+        if (row.kind === "Polévka") button.classList.add("calendar-soup");
+        const item = el("li");
+        item.append(button);
+        items.append(item);
+      }
+      day.append(items);
+    }
+    calendar.append(day);
+  }
+  return calendar;
 }
 
 function checks(parent, values, checked = true) {
@@ -560,9 +651,26 @@ $("history-week-picker").addEventListener("focusout", event => {
 document.addEventListener("click", event => {
   if (!$("history-week-picker").contains(event.target)) setWeekOptionsOpen(false);
 });
-$("history-query").oninput = () => {selectedHistoryDate = null; renderHistory();};
-$("previous-week").onclick = () => chooseWeek(weeks[weeks.indexOf(selectedWeek)+1]);
-$("next-week").onclick = () => chooseWeek(weeks[weeks.indexOf(selectedWeek)-1]);
+$("history-modes").querySelectorAll("button").forEach(button => {
+  button.onclick = () => {
+    $("history-query").value = "";
+    setHistoryMode(button.dataset.mode);
+    renderHistory();
+  };
+});
+$("history-query").oninput = () => {
+  selectedHistoryDate = null;
+  if ($("history-query").value.trim()) setHistoryMode("list");
+  renderHistory();
+};
+function stepHistory(direction) {
+  const monthly = historyMode === "month";
+  const periods = monthly ? historyMonths() : weeks;
+  const selected = monthly ? selectedMonth : selectedWeek;
+  chooseHistoryPeriod(periods[periods.indexOf(selected)+direction]);
+}
+$("previous-week").onclick = () => stepHistory(1);
+$("next-week").onclick = () => stepHistory(-1);
 $("add-menu").onclick = () => editMenu();
 document.querySelectorAll("[data-close]").forEach(button=>button.onclick=()=>button.closest("dialog").close());
 const pageTop = $("page-top");

@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Galerie, plánování a historie jídelních lístků Peters Canteen.">
   <title>Pomocník pro kuchaře · Peters Canteen</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
   <script src="history.js?v=20261130" defer></script>
   <script src="photos.js" defer></script>
   <script src="planner.js?v=4" defer></script>
-  <script src="app.js?v=4" defer></script>
+  <script src="app.js?v=5" defer></script>
 </head>
 <body>
 <header class="top">
@@ -56,6 +56,11 @@
   </section>
   <section id="historie" class="view" hidden aria-labelledby="history-title">
     <div class="heading"><h1 id="history-title">Historie jídelních lístků</h1><button id="add-menu" type="button" class="secondary">Doplnit jídelní lístek</button></div>
+    <div id="history-modes" class="history-modes" role="group" aria-label="Zobrazení historie">
+      <button type="button" class="secondary" data-mode="list" aria-pressed="true">Seznam</button>
+      <button type="button" class="secondary" data-mode="week" aria-pressed="false">Týdenní kalendář</button>
+      <button type="button" class="secondary" data-mode="month" aria-pressed="false">Měsíční kalendář</button>
+    </div>
     <div class="panel history-tools">
       <div id="history-week-picker" class="week-picker">
         <span id="history-week-label">Týden</span>

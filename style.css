@@ -87,6 +87,29 @@ legend{font-weight:700;margin-bottom:6px}
 .week-option[aria-current=true]{background:#faeae3;color:var(--deep)}
 .week-option[aria-current=true]::after{content:"✓";position:absolute;inset-inline-end:10px}
 .history-day h3.section-label{color:var(--deep);margin-top:12px}
+.history-modes{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}
+.history-modes button{min-height:42px}
+.history-modes button[aria-pressed=true]{background:#faeae3;color:var(--deep);border-color:var(--accent)}
+.menu-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-block:16px}
+.calendar-weekday{padding:4px 2px;color:var(--muted);text-align:center;font-weight:650}
+.calendar-day{min-width:0;min-height:64px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--white)}
+.calendar-empty{background:var(--surface);color:var(--muted)}
+.calendar-selected{border-color:var(--accent)}
+.calendar-day h2{margin:0 0 7px;font-size:1.05rem}
+.calendar-date-number{display:block;font-variant-numeric:tabular-nums}
+.calendar-month .calendar-full-date{display:none}
+.calendar-meals{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.calendar-meal{display:block;width:100%;min-height:32px;padding:4px 6px;border-color:var(--line);background:var(--bg);color:var(--ink);text-align:left;font:600 .86rem/1.23 var(--body);overflow-wrap:anywhere}
+.calendar-meal:hover{background:#faeae3;color:var(--deep);border-color:var(--accent)}
+.calendar-soup{color:var(--muted);font-weight:400}
+@media(max-width:1000px){
+  .menu-calendar{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .calendar-month .calendar-full-date{display:inline}
+  .calendar-month :is(.calendar-date-number,.calendar-weekday,.calendar-spacer,.calendar-empty){display:none}
+  .calendar-meal{min-height:40px;font-size:.94rem}
+}
+@media(max-width:660px){.menu-calendar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.menu-calendar{grid-template-columns:1fr}}
 .history-dish{display:grid;grid-template-columns:1fr auto;gap:8px}
 .history-dish .dish-labels,.history-dish .meta{grid-column:1 / -1}
 .empty{border:1px dashed #cfc7b9;border-radius:9px;padding:17px;color:var(--muted)}
