@@ -345,6 +345,7 @@ function chooseHistoryPeriod(period) {
 function setHistoryMode(mode) {
   if (mode === historyMode) return;
   historyMode = mode;
+  $("historie").classList.toggle("history-month-mode", mode === "month");
   setWeekOptionsOpen(false);
   $("history-modes").querySelectorAll("button").forEach(button => {
     button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
@@ -448,8 +449,27 @@ function historyCalendarDays(monthly) {
 function historyCalendar(table, days, monthly) {
   const calendar = el("div", "", "menu-calendar " + (monthly ? "calendar-month" : "calendar-week"));
   const byId = new Map(dishes.map(dish => [dish.id,dish]));
+  const mobileDates = el("div", "", "calendar-mobile-dates");
+  const dayPanels = new Map();
+  const dateButtons = new Map();
+  let activeDate;
+
+  function selectDate(date) {
+    if (activeDate) {
+      dayPanels.get(activeDate).classList.remove("calendar-active");
+      dateButtons.get(activeDate).setAttribute("aria-pressed", "false");
+    }
+    activeDate = date;
+    dayPanels.get(date).classList.add("calendar-active");
+    dateButtons.get(date).setAttribute("aria-pressed", "true");
+  }
+
   if (monthly) {
     for (const name of dayNames) calendar.append(el("div", name, "calendar-weekday"));
+    mobileDates.setAttribute("role", "group");
+    mobileDates.setAttribute("aria-label", "Vybrat den v měsíci");
+    for (const name of ["Po", "Út", "St", "Čt", "Pá"]) mobileDates.append(el("span", name, "calendar-mobile-weekday"));
+    calendar.append(mobileDates);
   }
   for (const date of days) {
     const rows = table.get(date) || [];
@@ -462,14 +482,24 @@ function historyCalendar(table, days, monthly) {
     heading.append(el("span",labelDay(date),"calendar-full-date"));
     if (monthly) {
       const dayNumber = Number(date.slice(-2));
-      const number = el("span", otherMonth ? `${dayNumber}. ${Number(date.slice(5,7))}.` : String(dayNumber), "calendar-date-number");
+      const label = otherMonth ? `${dayNumber}. ${Number(date.slice(5,7))}.` : String(dayNumber);
+      const number = el("span", label, "calendar-date-number");
       number.setAttribute("aria-hidden","true");
       heading.setAttribute("aria-label",labelDay(date) + (otherMonth ? " · sousední měsíc" : ""));
       heading.append(number);
+      const pick = trigger(label, () => selectDate(date), "secondary calendar-date-button");
+      if (otherMonth) pick.classList.add("calendar-other-month");
+      if (rows.length) pick.classList.add("calendar-has-menu");
+      pick.setAttribute("aria-label", labelDay(date) + (rows.length ? " · menu k dispozici" : " · bez záznamu"));
+      pick.setAttribute("aria-controls",day.id);
+      pick.setAttribute("aria-pressed","false");
+      mobileDates.append(pick);
+      dateButtons.set(date,pick);
+      dayPanels.set(date,day);
     }
     day.append(heading);
     if (!rows.length) {
-      if (!monthly) day.append(el("p","Bez záznamu","meta"));
+      day.append(el("p","Bez záznamu","meta calendar-empty-note"));
     } else {
       const items = el("ul", "", "calendar-meals");
       for (const row of rows) {
@@ -485,6 +515,13 @@ function historyCalendar(table, days, monthly) {
       day.append(items);
     }
     calendar.append(day);
+  }
+  if (monthly) {
+    const today = C.localToday();
+    const defaultDay = days.includes(selectedHistoryDate) ? selectedHistoryDate :
+      days.includes(today) && table.has(today) ? today :
+      days.find(date => date.startsWith(selectedMonth) && table.has(date)) ?? days[0];
+    selectDate(defaultDay);
   }
   return calendar;
 }
