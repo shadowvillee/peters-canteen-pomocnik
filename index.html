@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Galerie, plánování a historie jídelních lístků Peters Canteen.">
   <title>Pomocník pro kuchaře · Peters Canteen</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <script src="history.js?v=20261130" defer></script>
   <script src="photos.js" defer></script>
   <script src="planner.js?v=3" defer></script>
-  <script src="app.js?v=3" defer></script>
+  <script src="app.js?v=4" defer></script>
 </head>
 <body>
 <header class="top">
@@ -70,10 +70,11 @@
     <div id="menus" aria-live="polite"></div>
   </section>
 </main>
+<button id="page-top" class="scroll-top" type="button" aria-label="Zpět nahoru" title="Zpět nahoru" hidden></button>
 <dialog id="detail" aria-labelledby="dish-detail-title">
   <div class="dialog-top"><button class="secondary" data-close type="button">Zavřít</button></div>
   <div id="dish-detail"></div>
-  <div class="detail-quick-actions"><button id="detail-top" type="button" aria-label="Zpět na začátek detailu" title="Zpět na začátek detailu" hidden></button></div>
+  <div class="detail-quick-actions"><button id="detail-top" class="scroll-top" type="button" aria-label="Zpět na začátek detailu" title="Zpět na začátek detailu" hidden></button></div>
 </dialog>
 <dialog id="photo-viewer" aria-label="Zvětšená fotka jídla">
   <button class="secondary" data-close type="button" autofocus>Zavřít fotku</button>

@@ -183,7 +183,7 @@ function renderGallery() {
     const body = el("div", "", "dish-body");
     const h = el("h2");
     h.append(trigger(dish.title, () => detail(dish), "dish-title"));
-    body.append(h, tags(dish), el("div", countLabel(dish.dates.length) + (dish.dates.length ? " · naposledy " + labelDate(dish.dates[0]) : ""), "meta"));
+    body.append(h, tags(dish), el("div", countLabel(dish.dates.length) + (dish.kind !== "Polévka" && dish.dates.length ? " · naposledy " + labelDate(dish.dates[0]) : ""), "meta"));
     card.append(body);
     grid.append(card);
   }
@@ -251,7 +251,7 @@ function detail(dish, preferredDate) {
   heading.id = "dish-detail-title";
   heading.tabIndex = -1;
   contents.replaceChildren(heading, tags(dish), el("p", countLabel(dish.dates.length), "meta"), detailPhotos(dish, preferredDate));
-  if (dish.dates.length) {
+  if (dish.kind !== "Polévka" && dish.dates.length) {
     contents.append(el("h3", "Data v jídelníčku"));
     const dates = el("div", "", "date-links");
     for (const day of dish.dates) {
@@ -565,13 +565,21 @@ $("previous-week").onclick = () => chooseWeek(weeks[weeks.indexOf(selectedWeek)+
 $("next-week").onclick = () => chooseWeek(weeks[weeks.indexOf(selectedWeek)-1]);
 $("add-menu").onclick = () => editMenu();
 document.querySelectorAll("[data-close]").forEach(button=>button.onclick=()=>button.closest("dialog").close());
+const pageTop = $("page-top");
+const scrollBehavior = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+const updatePageTop = () => { pageTop.hidden = window.scrollY < 300; };
+window.addEventListener("scroll", updatePageTop, {passive:true});
+updatePageTop();
+pageTop.onclick = () => {
+  document.querySelector(".brand").focus({preventScroll:true});
+  window.scrollTo({top:0, behavior:scrollBehavior()});
+};
 $("detail").addEventListener("scroll", () => {
   $("detail-top").hidden = $("detail").scrollTop < 180;
 }, {passive:true});
 $("detail-top").onclick = () => {
   $("dish-detail-title").focus({preventScroll:true});
-  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  $("detail").scrollTo({top:0, behavior:reducedMotion ? "instant" : "smooth"});
+  $("detail").scrollTo({top:0, behavior:scrollBehavior()});
 };
 $("menu-form").onsubmit = e=>{
   e.preventDefault();
