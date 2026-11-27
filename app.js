@@ -381,17 +381,19 @@ function renderHistory() {
   $("previous-week").disabled = index < 0 || index >= periods.length - 1;
   $("next-week").disabled = index <= 0;
   const filter = $("history-query").value.trim();
+  const calendarDays = historyMode !== "list" && selected ? historyCalendarDays(monthly) : null;
+  const calendarDates = calendarDays && new Set(calendarDays);
   const table = new Map();
   const result = filter ? history.filter(row => words(row.title, filter)).slice().reverse() :
-    history.filter(row => monthly ? row.date.slice(0,7) === selected : C.monday(row.date) === selected);
+    history.filter(row => calendarDates ? calendarDates.has(row.date) : C.monday(row.date) === selected);
   for (const row of result) {
     if (!table.has(row.date)) table.set(row.date, []);
     table.get(row.date).push(row);
   }
   const container = $("menus");
   container.replaceChildren();
-  if (historyMode !== "list" && selected) {
-    container.append(historyCalendar(table, monthly));
+  if (calendarDays) {
+    container.append(historyCalendar(table, calendarDays, monthly));
     return;
   }
   for (const [day, rows] of table) {
@@ -428,28 +430,41 @@ function shortCalendarTitle(title) {
   return label.replace(/\s+(?:s|se|z|a|na|v|ve|po|podle)$/i, "").replace(/[,;:/–-]+$/, "");
 }
 
-function historyCalendar(table, monthly) {
-  const first = monthly ? selectedMonth + "-01" : selectedWeek;
-  const offset = monthly ? C.weekday(first) : 0;
-  const count = monthly ? new Date(Date.UTC(Number(first.slice(0,4)), Number(first.slice(5,7)), 0)).getUTCDate() : 7;
+function historyCalendarDays(monthly) {
+  if (!monthly) return dayNames.map((_, i) => C.add(selectedWeek, i));
+  let first = selectedMonth + "-01";
+  const [year, month] = selectedMonth.split("-").map(Number);
+  let last = C.iso(new Date(Date.UTC(year, month, 0)));
+  while (C.weekday(first) >= dayNames.length) first = C.add(first, 1);
+  while (C.weekday(last) >= dayNames.length) last = C.add(last, -1);
+  const lastWeek = C.monday(last);
+  const days = [];
+  for (let week = C.monday(first); week <= lastWeek; week = C.add(week, 7)) {
+    days.push(...dayNames.map((_, i) => C.add(week, i)));
+  }
+  return days;
+}
+
+function historyCalendar(table, days, monthly) {
   const calendar = el("div", "", "menu-calendar " + (monthly ? "calendar-month" : "calendar-week"));
   const byId = new Map(dishes.map(dish => [dish.id,dish]));
   if (monthly) {
-    for (const name of [...dayNames,"Sobota","Neděle"]) calendar.append(el("div", name, "calendar-weekday"));
-    for (let i = 0; i < offset; i++) calendar.append(el("div", "", "calendar-spacer"));
+    for (const name of dayNames) calendar.append(el("div", name, "calendar-weekday"));
   }
-  for (let i = 0; i < count; i++) {
-    const date = C.add(first, i);
+  for (const date of days) {
     const rows = table.get(date) || [];
+    const otherMonth = monthly && date.slice(0,7) !== selectedMonth;
     const day = el("article", "", "calendar-day" + (rows.length ? "" : " calendar-empty"));
     day.id = "day-" + date;
+    if (otherMonth) day.classList.add("calendar-other-month");
     if (date === selectedHistoryDate) day.classList.add("calendar-selected");
     const heading = el("h2");
     heading.append(el("span",labelDay(date),"calendar-full-date"));
     if (monthly) {
-      const number = el("span", String(Number(date.slice(-2))), "calendar-date-number");
+      const dayNumber = Number(date.slice(-2));
+      const number = el("span", otherMonth ? `${dayNumber}. ${Number(date.slice(5,7))}.` : String(dayNumber), "calendar-date-number");
       number.setAttribute("aria-hidden","true");
-      heading.setAttribute("aria-label",labelDay(date));
+      heading.setAttribute("aria-label",labelDay(date) + (otherMonth ? " · sousední měsíc" : ""));
       heading.append(number);
     }
     day.append(heading);
